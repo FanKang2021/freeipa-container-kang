@@ -12,5 +12,4 @@
     -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
     -v /var/lib/ipa-data-test:/data:Z  -v /etc/localtime:/etc/locatime:ro \
     -e IP_ADDRESS=`hostname -i` -e DOMAIN_NAME=example.com -e REALM_NAME=EXAMPLE.LOCAL \
-    -e HOST_NAME=freeipa.example.com \
     kang2023/freeipa-server:rocky-9-4.10.1
