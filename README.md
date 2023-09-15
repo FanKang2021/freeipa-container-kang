@@ -13,3 +13,8 @@
     -v /var/lib/ipa-data-test:/data:Z  -v /etc/localtime:/etc/locatime:ro \
     -e IP_ADDRESS=`hostname -i` -e DOMAIN_NAME=example.com -e REALM_NAME=EXAMPLE.LOCAL \
     kang2023/freeipa-server:rocky-9-4.10.1
+
+# client install test
+[root@localhost]# ipa-client-install -U  --hostname=`hostname -f` --mkhomedir --server=host7223.zetyun.local --domain zetyun.local --realm ZETYUN.LOCAL --no-ntp --enable-dns-updates -w 12345678 -p admin
+#client uninstall
+[root@localhost]# ipa-client-install -U --uninstall
