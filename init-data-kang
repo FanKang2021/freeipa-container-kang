@@ -117,7 +117,7 @@ chmod 600 $OPTIONS_FILE
 #for i in "$@" ; do
 #	printf '%q\n' "$i" >> $OPTIONS_FILE
 #done
-echo "-U -a ${ADMIN_PASSWORD} -p ${DM_PASSWORD} --ip-address=${IP_ADDRESS} -n ${DOMAIN_NAME} -r ${REALM_NAME} --no-host-dns --no-ntp" >> $OPTIONS_FILE
+echo "-U -a ${ADMIN_PASSWORD} -p ${DM_PASSWORD} --ip-address=${IP_ADDRESS} -n ${DOMAIN_NAME} -r ${REALM_NAME} --setup-dns --no-forwarders --no-ntp" >> $OPTIONS_FILE
 
 _HOSTNAME_IN_NEXT=false
 for i in $( cat $OPTIONS_FILE ) ; do
