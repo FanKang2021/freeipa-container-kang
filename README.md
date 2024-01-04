@@ -15,6 +15,6 @@
     kang2023/freeipa-server:rocky-9-4.10.1
 
 # client install test
-[root@localhost]# ipa-client-install -U  --hostname=`hostname -f` --mkhomedir --server=host7223.zetyun.local --domain zetyun.local --realm ZETYUN.LOCAL --no-ntp --enable-dns-updates -w 12345678 -p admin
+[root@localhost]# ipa-client-install -U  --hostname=`hostname -f` --mkhomedir --server=ipa.exmaple.com --domain example.com --realm EXAMPLE.LOCAL --no-ntp --enable-dns-updates -w 12345678 -p admin
 #client uninstall
 [root@localhost]# ipa-client-install -U --uninstall
