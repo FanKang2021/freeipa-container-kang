@@ -18,3 +18,10 @@
 [root@localhost]# ipa-client-install -U  --hostname=`hostname -f` --mkhomedir --server=ipa.example.com --domain example.com --realm EXAMPLE.COM--no-ntp --enable-dns-updates -w 12345678 -p admin
 #client uninstall
 [root@localhost]# ipa-client-install -U --uninstall
+
+#devel-k8s
+基于K8S启动freeipa-server
+自定义httpd.conf ServerName <your hostname>
+
+[root@localhost]# docker build -t kang2023/freeipa-server:k8s-v1 -f Dockerfile.rocky-9-kang .
+[root@localhost]# kubectl create -f freeipa-k8s.yaml-kang
