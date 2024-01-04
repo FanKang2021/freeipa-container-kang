@@ -3,6 +3,9 @@
 /etc/certmonger/
 /etc/dirsrv/
 /etc/gssproxy/
+/etc/httpd/alias/
+/etc/httpd/conf/
+/etc/httpd/conf.d/
 /etc/ipa/
 /etc/krb5.conf
 /etc/krb5.conf.d/
