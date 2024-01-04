@@ -1,0 +1,3 @@
+#!/bin/bash
+echo "$IPADDR $HOSTNAME" >> /etc/hosts
+echo "$HOSTNAME" >> /etc/hostname
