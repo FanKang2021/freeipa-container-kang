@@ -1,4 +1,4 @@
-#基于开源项目[freeipa-container ](https://github.com/freeipa/freeipa-container/blob/master)自定义option实现静默安装
+# 基于开源项目[freeipa-container ](https://github.com/freeipa/freeipa-container/blob/master)自定义option实现静默安装
 
 [root@localhost]# docker build -t kang2023/freeipa-server:rocky-9-4.10.1 -f Dockerfile.rocky-9-kang .
 
@@ -19,7 +19,7 @@
 #client uninstall
 [root@localhost]# ipa-client-install -U --uninstall
 
-#devel-k8s
+# devel-k8s
 基于K8S启动freeipa-server
 自定义httpd.conf ServerName <your hostname>
 
