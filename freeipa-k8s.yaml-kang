@@ -13,13 +13,7 @@ spec:
     metadata:
       labels:
         app: freeipa
-      annotations:
-        "cni.projectcalico.org/ipAddrs": "[\"10.233.207.58\"]"
     spec:
-      hostAliases:
-        - ip: "10.233.207.58"
-          hostnames: 
-            - "freeipa.dev.default.svc.cluster.local"
       hostname: freeipa
       subdomain: dev
       setHostnameAsFQDN: true
@@ -43,7 +37,9 @@ spec:
             - name: DM_PASSWORD
               value: "12345678"
             - name: IP_ADDRESS
-              value: "10.233.207.58"
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
             - name: DOMAIN_NAME
               value: "dev.default.svc.cluster.local"
             - name: REALM_NAME
@@ -55,6 +51,8 @@ spec:
               mountPath: /data
             - name: cache-volume
               mountPath: /dev/shm
+            - name: httpd-conf
+              mountPath: /etc/httpd/conf
       volumes:
         - name: freeipa-storage
           persistentVolumeClaim:
@@ -63,3 +61,6 @@ spec:
           emptyDir:
             medium: Memory
             sizeLimit: 4G
+        - name: httpd-conf
+          configMap:
+            name: freeipa-httpd-conf
