@@ -93,7 +93,7 @@ ENV ADMIN_PASSWORD=12345678 \
 
 COPY init-data-minimal /usr/local/sbin/init
 RUN mkdir -p /etc/named
-COPY ipa-options-ext-kang.conf /etc/named/ipa-options-ext.conf
+COPY ipa-options-ext.conf /etc/named/
 ENTRYPOINT [ "/usr/local/sbin/init" ]
 # test: systemd-container-ipa-server-install-data.sh /dev/null
 
