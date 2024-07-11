@@ -22,7 +22,7 @@
 
 [root@localhost]# ipa-client-install -U --uninstall
 
-# devel-k8s
+# devel-k8s-v2
 
 基于K8S启动freeipa-server,添加定时任务
 备份参考 [https://github.com/FanKang2021/freeipa-container-kang/blob/devel-k8s-v2/ipa-backup-cronjob](url)
