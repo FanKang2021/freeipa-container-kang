@@ -22,7 +22,7 @@
 
 [root@localhost]# ipa-client-install -U --uninstall
 
-# devel-k8s
+# devel-k8s-v1
 
 基于K8S启动freeipa-server
 
