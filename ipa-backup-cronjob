@@ -1,0 +1,181 @@
+Step1 配置Freeipa Server Crontab
+
+[root@freeipa /]# cat /etc/crontab 
+SHELL=/bin/bash
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+MAILTO=root
+
+# For details see man 4 crontabs
+
+# Example of job definition:
+# .---------------- minute (0 - 59)
+# |  .------------- hour (0 - 23)
+# |  |  .---------- day of month (1 - 31)
+# |  |  |  .------- month (1 - 12) OR jan,feb,mar,apr ...
+# |  |  |  |  .---- day of week (0 - 6) (Sunday=0 or 7) OR sun,mon,tue,wed,thu,fri,sat
+# |  |  |  |  |
+# *  *  *  *  * user-name  command to be executed
+
+36 14 * * * root /usr/sbin/ipa-backup 
+
+#备份参数注解
+让 FreeIPA Server 离线并创建全服务器备份:
+
+[root@a ~]# ipa-backup
+Preparing backup on a.ipa.test.local
+Local roles match globally used roles, proceeding.
+Stopping IPA services
+Backing up ipaca in IPA-TEST-LOCAL to LDIF
+Backing up userRoot in IPA-TEST-LOCAL to LDIF
+Backing up IPA-TEST-LOCAL
+Backing up files
+Starting IPA service
+Backed up to /var/lib/ipa/backup/ipa-full-2023-05-21-09-00-09
+The ipa-backup command was successful
+让 FreeIPA Server 离线并创建数据备份:
+
+[root@a ~]# ipa-backup --data
+让 FreeIPA Server 离线并创建带有全部日志文件的全服务器备份:
+
+[root@a ~]# ipa-backup --logs
+FreeIPA Server 不离线并创建数据备份:
+
+[root@a ~]# ipa-backup --data --online
+
+
+Step 2 创建freeipa-backup-cronjob to minio
+
+root@k8s-master01:~# cat freeipa-backup-cronjob.yaml 
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: backup-freeipa-to-minio
+spec:
+  schedule: "*/1 * * * *"  # 测试
+  startingDeadlineSeconds: 60   #重点 job存活时间 默认不设置为永久
+  successfulJobsHistoryLimit: 1  #重点 成功job历史显示个数
+  jobTemplate:
+    spec:
+      backoffLimit: 3
+      template:
+        spec:
+          containers:
+          - name: backup
+            image: minio-mc:latest
+            command: ["/bin/sh", "-c"]
+            args:
+            - |
+              set -e
+
+              # 设置 mc 客户端
+              mc alias set myminio  http://xxx.xxx.xxx.xxx:9000 minio <passwd> 
+
+              # 执行上传操作
+              mc cp /data/var/lib/ipa/backup/* myminio/freeipa-backup/ --recursive
+            volumeMounts:
+            - name: data
+              mountPath: /data  # 修改为 PVC 挂载点路径
+          restartPolicy: OnFailure
+          volumes:
+          - name: data
+            persistentVolumeClaim:
+              claimName: freeipa-data-pvc  # 使用上面创建的 PVC
+root@k8s-master01:~/fankang_workspace# kubectl get cronjobs.batch
+NAME                      SCHEDULE      SUSPEND   ACTIVE   LAST SCHEDULE   AGE
+backup-freeipa-to-minio   */1 * * * *   False     0        55s             6m16s
+root@k8s-master01:~/fankang_workspace# kubectl get po backup-freeipa-to-minio-28653620-5n6g4 
+NAME                                     READY   STATUS      RESTARTS   AGE
+backup-freeipa-to-minio-28653620-5n6g4   0/1     Completed   0          60s
+
+
+
+Step 3 使用备份文件恢复
+操作执行前需要先获取管理员身份凭证:
+
+[root@b ~]# kinit admin
+Password for admin@IPA.TEST.LOCAL:
+第一步，
+
+如果备份目录位于默认 /var/lib/ipa/backup 位置，则只输入目录名称：
+
+[root@a ~]# ipa-restore ipa-full-2023-05-21-09-00-09
+如果备份目录不在默认位置，请输入其完整路径：
+
+[root@a ~]# ipa-restore /mybackups/ipa-full-2023-05-21-09-00-09
+恢复前需要输入一遍 Directory Manager 的密码，确认所有数据都会被覆盖，提示所有的服务器都需要根据这台机器重新初始化，最后关闭 FreeIPA 服务、恢复备份再在本机上重新启动 FreeIPA 服务。
+
+第三步，清除 SSSD 的缓存，避免因为数据无效而导致身份验证问题:
+
+停止 SSSD 服务 systemctl stop sssd
+从 SSSD 中删除所有缓存的内容 sss_cache -E
+启动 SSSD 服务 systemctl start sssd
+第四步，重启服务器。
+
+[root@freeipa /]# ipa user-del tom
+------------------
+Deleted user "tom"
+------------------
+[root@freeipa /]# ipa user-del john
+-------------------
+Deleted user "john"
+-------------------
+[root@freeipa /]# ipa-restore
+Usage: ipa-restore [options] backup
+
+ipa-restore: error: must provide the backup to restore
+The ipa-restore command failed.
+[root@freeipa /]# ipa-restore /var/lib/ipa/backup/ipa-data-2024-06-26-15-07-15
+Directory Manager (existing master) password: 
+
+Preparing restore from /var/lib/ipa/backup/ipa-data-2024-06-26-15-07-15 on freeipa.bak.xxx.svc.cluster.local
+Performing DATA restore from DATA backup
+Temporary setting umask to 022
+Restoring data will overwrite existing live data. Continue to restore? [no]: yes
+Each master will individually need to be re-initialized or
+re-created from this one. The replication agreements on
+masters running IPA 3.1 or earlier will need to be manually
+re-enabled. See the man page for details.
+Disabling all replication.
+Stopping Directory Server
+Restoring from userRoot in BAK-XXX-SVC-CLUSTER-LOCAL
+Restoring from ipaca in BAK-XXX-SVC-CLUSTER-LOCAL
+Starting Directory Server
+Restoring umask to 18
+The ipa-restore command was successful
+[root@freeipa /]# ipa user-find tom
+--------------
+1 user matched
+--------------
+  User login: tom
+  First name: tom
+  Last name: Doe
+  Home directory: /home/tom
+  Login shell: /bin/sh
+  Principal name: tom@BAK.XXX.SVC.CLUSTER.LOCAL
+  Principal alias: tom@BAK.XXX.SVC.CLUSTER.LOCAL
+  Email address: tom@example.com
+  UID: 261400005
+  GID: 261400005
+  Account disabled: False
+----------------------------
+Number of entries returned 1
+----------------------------
+[root@freeipa /]# ipa user-find john
+--------------
+1 user matched
+--------------
+  User login: john
+  First name: John
+  Last name: Doe
+  Home directory: /home/john
+  Login shell: /bin/sh
+  Principal name: john@BAK.XXX.SVC.CLUSTER.LOCAL
+  Principal alias: john@BAK.XXX.SVC.CLUSTER.LOCAL
+  Email address: john@example.com
+  UID: 261400003
+  GID: 261400003
+  Account disabled: False
+----------------------------
+Number of entries returned 1
+----------------------------
+
