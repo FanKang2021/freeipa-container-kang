@@ -1,25 +1,36 @@
+apiVersion: v1  
+kind: Secret  
+metadata:  
+  name: mysecret  
+type: Opaque  
+data:  
+  admin-pass: MTIzNDU2Nzg=
+  dm-pass: MTIzNDU2Nzg=
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: freeipa
+  name: freeipa123
   namespace: default
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: freeipa
+      app: freeipa123
   template:
     metadata:
       labels:
-        app: freeipa
+        app: freeipa123
     spec:
       hostname: freeipa
-      subdomain: dev
+      subdomain: xxx
       setHostnameAsFQDN: true
-      nodeName: sd-k8s-work-1
+      hostAliases:
+      - ip: "127.0.0.1"
+        hostnames:
+        - "freeipa.default.svc.cluster.local"
       containers:
-        - image: kang2023/freeipa-server:k8s-v1
+        - image: kang2023/freeipa-server:add-cron
           imagePullPolicy: Always
           securityContext:
             privileged: true
@@ -33,19 +44,32 @@ spec:
               containerPort: 389
           env:
             - name: ADMIN_PASSWORD
-              value: "12345678"
+              valueFrom:
+                secretKeyRef:
+                  name: mysecret
+                  key: admin-pass
             - name: DM_PASSWORD
-              value: "12345678"
+              valueFrom:
+                secretKeyRef:
+                  name: mysecret
+                  key: dm-pass
             - name: IP_ADDRESS
               valueFrom:
                 fieldRef:
                   fieldPath: status.podIP
             - name: DOMAIN_NAME
-              value: "dev.default.svc.cluster.local"
+              value: "xxx.default.svc.cluster.local"
             - name: REALM_NAME
-              value: "dev.default.svc.cluster.local"
+              value: "XXX.DEFAULT.SVC.CLUSTER.LOCAL"
             - name: HOSTNAME 
-              value: "freeipa.dev.default.svc.cluster.local"
+              value: "freeipa.xxx.default.svc.cluster.local"
+          resources:
+            requests:
+              memory: "8Gi"
+              cpu: "4"
+            limits:
+              memory: "16Gi"
+              cpu: "8"
           volumeMounts:
             - name: freeipa-storage
               mountPath: /data
@@ -53,10 +77,13 @@ spec:
               mountPath: /dev/shm
             - name: httpd-conf
               mountPath: /etc/httpd/conf
+            - name: freeipa-cron
+              mountPath: /etc/crontab
+              subPath: crontab
       volumes:
         - name: freeipa-storage
           persistentVolumeClaim:
-            claimName: freeipa-data-pvc
+            claimName: freeipa-data-pvc123
         - name: cache-volume
           emptyDir:
             medium: Memory
@@ -64,3 +91,18 @@ spec:
         - name: httpd-conf
           configMap:
             name: freeipa-httpd-conf
+        - name: freeipa-cron
+          configMap:
+            name: freeipa-cron
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: freeipa-data-pvc123
+spec:
+  storageClassName: "xxx"
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 6Gi
