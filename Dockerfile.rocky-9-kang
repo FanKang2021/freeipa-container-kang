@@ -76,6 +76,7 @@ COPY utils/prepare-volume-template utils/populate-volume-from-template utils/ext
 #COPY volume-data-list volume-tmp-list volume-data-autoupdate /etc/
 COPY httpd-ssl-gencerts /usr/libexec/httpd-ssl-gencerts
 COPY httpd.conf /etc/httpd/conf/httpd.conf
+COPY ipa-options-ext.conf /etc/named/ipa-options-ext.conf
 COPY volume-data-list volume-data-autoupdate /etc/
 RUN /usr/local/bin/prepare-volume-template /etc/volume-data-list /data
 #RUN /usr/local/bin/prepare-volume-template /etc/volume-tmp-list /tmp

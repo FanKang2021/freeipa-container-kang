@@ -220,6 +220,7 @@ else
 		fi
 		systemctl enable ipa-server-update-self-ip-address.service
 		systemctl enable ipa-server-upgrade.service
+		systemctl enable crond --now
 		systemctl disable ipa-server-configure-first.service || rm -f /etc/systemd/system/multi-user.target.wants/ipa-server-configure-first.service
 		echo "FreeIPA server configured."
 	else

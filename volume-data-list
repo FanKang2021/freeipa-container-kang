@@ -3,6 +3,9 @@
 /etc/certmonger/
 /etc/dirsrv/
 /etc/gssproxy/
+/etc/httpd/alias/
+/etc/httpd/conf/httpd.conf
+/etc/httpd/conf.d/
 /etc/ipa/
 /etc/krb5.conf
 /etc/krb5.conf.d/
@@ -18,7 +21,7 @@
 /etc/pam.d/
 /etc/pki/ca-trust/
 /etc/pki/nssdb/
-/etc/pki/pki-tomcat
+/etc/pki/pki-tomcat/
 /etc/pkcs11/modules/
 /etc/rndc.key
 /etc/samba/
